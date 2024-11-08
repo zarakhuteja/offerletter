@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offer Letter Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Basic styling */
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 20px;
+        }
+        /* Styling for the logo image */
+        #companyLogo {
+            display: none;
+            max-width: 150px;  /* Larger size for the logo */
+            height: auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .upload-btn-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        #uploadLogo {
+            display: none; /* Hide file input initially */
+        }
+        .address-container {
+            width: 100%;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            min-height: 50px;
+            font-size: 14px;
+            margin-top: 10px;
+            background-color: #f9f9f9;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        textarea, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        input{
+            width: 100%;
+            box-sizing: border-box;
+            height:30px;
+
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="pdfContent">
+    <!-- Header with Logo and Address Container -->
+    <div class="header">
+        <!-- Logo placeholder -->
+        <img src="" alt="Company Logo" id="companyLogo">
+
+        <div class="upload-btn-container">
+            <!-- Upload Logo Button -->
+            <button type="button" id="uploadLogoBtn" onclick="showFileInput()">Upload Logo</button>
+            <!-- File input hidden but will be displayed after clicking the button -->
+            <input type="file" id="uploadLogo" accept="image/*" onchange="updateLogo(event)">
+        </div>
+
+        <!-- Editable Company Address -->
+        <div class="address-container" contenteditable="true" id="companyAddress">
+            Enter Company Address Here
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <form>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" placeholder="Enter Name">
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location:</label>
+            <input type="text" id="location" placeholder="Enter Location">
+        </div>
+
+        <div class="form-group">
+            <label for="date">Date and Time:</label>
+            <input type="datetime-local" id="date">
+        </div>
+
+        <div class="form-group">
+            <label for="country">Country:</label>
+            <select id="country">
+                <option value="EUR">EUR</option>
+                <option value="Canada">Canada</option>
+                <option value="UK">UK</option>
+                <option value="Australia">Australia</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="paragraph">Offer Letter Text:</label>
+            <textarea id="paragraph" rows="5" placeholder="Enter the offer letter text here..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="signature">Signature:</label>
+            <input type="text" id="signature" placeholder="Enter digital name for signature">
+        </div>
+    </form>
+</div>
+
+<!-- Download and Email Buttons -->
+<div class="button-container">
+    <button onclick="downloadPDF()">Download as PDF</button>
+    <button onclick="sharePDF()">Share via Email</button>
+</div>
+
+<script>
+    // Show file input when the upload button is clicked
+    function showFileInput() {
+        const fileInput = document.getElementById("uploadLogo");
+        fileInput.style.display = "block"; // Make the file input visible
+    }
+
+    // Function to update the logo when a file is uploaded
+    function updateLogo(event) {
+        const logo = document.getElementById("companyLogo");
+        const file = event.target.files[0]; // Get the uploaded file
+        if (file) {
+            const reader = new FileReader(); // Create a FileReader instance to read the file
+            reader.onload = function(e) {
+                logo.src = e.target.result; // Set the logo src to the uploaded file's result
+                logo.style.display = 'block'; // Ensure the logo is visible
+                document.getElementById("uploadLogoBtn").style.display = 'none'; // Hide the upload button after uploading
+            };
+            reader.readAsDataURL(file); // Read the file as a data URL
+        }
+    }
+
+    // Download PDF function using jsPDF and html2canvas
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = 210; // A4 width in mm
+        const pdfHeight = 297; // A4 height in mm
+        const content = document.getElementById("pdfContent");
+
+        html2canvas(content, {
+            scale: 2,
+            useCORS: true
+        }).then(canvas => {
+            const imgData = canvas.toDataURL("image/png");
+            const imgWidth = pdfWidth;
+            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 10, imgWidth, imgHeight);
+            pdf.save("Offer_Letter.pdf");
+        });
+    }
+
+    // Placeholder for share via email functionality
+    function sharePDF() {
+        const email = prompt("Enter the recipient's email address:");
+        if (email) {
+            alert(`The PDF will be sent to ${email}. (Implement email sending functionality here)`);
+        }
+    }
+</script>
+
+</body>
+</html>
